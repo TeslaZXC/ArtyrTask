@@ -306,3 +306,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.env
+.trello_clone.db
+.alembic.ini
+.pyvenv.cfg
+/uploads
+uploads/

@@ -8,6 +8,21 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    code: str
+
+class RequestCode(BaseModel):
+    email: EmailStr
+
+class VerifyRegisterCode(BaseModel):
+    email: EmailStr
+    code: str
+    password: str
+    full_name: Optional[str] = None
+
+class ResetPassword(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str
 
 class UserResponse(UserBase):
     id: int
@@ -37,6 +52,20 @@ class WorkspaceResponse(WorkspaceBase):
     id: int
     owner_id: int
     created_at: datetime
+    member_role: Optional[str] = None  # current user's role: 'owner'|'editor'|'member'
+
+    class Config:
+        from_attributes = True
+
+class WorkspaceMemberCreate(BaseModel):
+    email: str
+    role: str = "member"  # "editor" or "member"
+
+class WorkspaceMemberResponse(BaseModel):
+    user_id: int
+    email: str
+    full_name: Optional[str] = None
+    role: str
 
     class Config:
         from_attributes = True
@@ -117,6 +146,7 @@ class TaskUpdate(BaseModel):
     is_completed: Optional[bool] = None
     list_id: Optional[int] = None
     position: Optional[int] = None
+    color: Optional[str] = None
 
 class TaskOrderUpdateItem(BaseModel):
     id: int
@@ -127,6 +157,7 @@ class TaskResponse(TaskBase):
     id: int
     list_id: int
     position: int
+    color: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     attachments: List[TaskAttachmentResponse] = []

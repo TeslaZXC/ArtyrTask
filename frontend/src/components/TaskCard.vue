@@ -1,5 +1,5 @@
 <template>
-  <div class="task-card">
+  <div class="task-card" :style="task.color ? { borderTop: `3px solid ${task.color}` } : {}">
     <div class="task-header">
       <h4 :class="{ 'completed': task.is_completed }">{{ task.title }}</h4>
       <el-checkbox 

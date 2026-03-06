@@ -9,9 +9,31 @@
         <nav class="nav-links">
           <router-link to="/workspaces">Рабочие пространства</router-link>
         </nav>
-        <div class="user-actions">
-          <span class="user-name">{{ authStore.user?.full_name || authStore.user?.email }}</span>
-          <el-button @click="logout" type="danger" text>Выйти</el-button>
+        <div class="header-actions">
+          <el-dropdown trigger="click" @command="themeStore.setTheme">
+            <span class="el-dropdown-link theme-selector">
+              <el-icon><Brush /></el-icon>
+              {{ themeStore.themes.find(t => t.id === themeStore.currentTheme)?.name }}
+              <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item 
+                  v-for="theme in themeStore.themes" 
+                  :key="theme.id" 
+                  :command="theme.id"
+                  :disabled="themeStore.currentTheme === theme.id"
+                >
+                  {{ theme.name }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          
+          <div class="user-actions">
+            <span class="user-name">{{ authStore.user?.full_name || authStore.user?.email }}</span>
+            <el-button @click="logout" type="danger" text>Выйти</el-button>
+          </div>
         </div>
       </header>
       
@@ -30,12 +52,15 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
+import { useThemeStore } from './stores/theme'
+import { Brush, ArrowDown, Monitor } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 onMounted(() => {
-  document.documentElement.classList.add('dark')
+  themeStore.initTheme()
   authStore.init()
 })
 
@@ -93,10 +118,35 @@ const logout = () => {
   color: var(--primary-color);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.theme-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.theme-selector:hover {
+  background: rgba(var(--primary-color-rgb), 0.1);
+  color: var(--primary-color);
+}
+
 .user-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
+  border-left: 1px solid var(--border-color);
+  padding-left: 1.5rem;
 }
 
 .user-name {

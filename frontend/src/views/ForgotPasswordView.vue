@@ -1,49 +1,45 @@
 <template>
   <div class="auth-page flex-center page-container">
     <div class="auth-card glass-panel">
-      <h1 class="auth-title">Создать аккаунт</h1>
-      <p class="auth-subtitle">Зарегистрируйтесь, чтобы начать</p>
+      <h1 class="auth-title">Сброс пароля</h1>
+      <p class="auth-subtitle">Восстановите доступ к аккаунту с помощью почты</p>
       
-      <el-form :model="form" @submit.prevent="step === 1 ? handleRequestCode() : handleRegister()" label-position="top">
+      <el-form :model="form" @submit.prevent="step === 1 ? handleRequestResetCode() : handleResetPassword()" label-position="top">
         
-        <!-- Step 1: Email and Name -->
+        <!-- Step 1: Request Code -->
         <template v-if="step === 1">
-          <el-form-item label="Полное Имя">
-            <el-input v-model="form.fullName" placeholder="Иван Иванов" />
-          </el-form-item>
-
           <el-form-item label="Email">
             <el-input v-model="form.email" type="email" placeholder="ivan@example.com" />
           </el-form-item>
 
-          <el-button type="primary" native-type="submit" :loading="loading" class="submit-btn" :disabled="!form.email || !form.fullName">
+          <el-button type="primary" native-type="submit" :loading="loading" class="submit-btn" :disabled="!form.email">
             Отправить код
           </el-button>
         </template>
 
-        <!-- Step 2: Code and Password -->
+        <!-- Step 2: Code and New Password -->
         <template v-else>
           <div class="email-info">
             Код отправлен на <strong>{{ form.email }}</strong>
             <el-button type="primary" link @click="step = 1" class="edit-link">Изменить</el-button>
           </div>
 
-          <el-form-item label="Код подтверждения из почты">
+          <el-form-item label="Код подтверждения">
             <el-input v-model="form.code" placeholder="123456" />
           </el-form-item>
           
-          <el-form-item label="Пароль">
-            <el-input v-model="form.password" type="password" show-password placeholder="Придумайте пароль" />
+          <el-form-item label="Новый пароль">
+            <el-input v-model="form.newPassword" type="password" show-password placeholder="Введите новый пароль" />
           </el-form-item>
           
-          <el-button type="primary" native-type="submit" :loading="loading" class="submit-btn" :disabled="!form.code || !form.password">
-            Зарегистрироваться
+          <el-button type="primary" native-type="submit" :loading="loading" class="submit-btn" :disabled="!form.code || !form.newPassword">
+            Сбросить пароль
           </el-button>
         </template>
       </el-form>
       
       <div class="auth-footer">
-        Уже есть аккаунт? <router-link to="/login">Войти</router-link>
+        Вспомнили пароль? <router-link to="/login">Вернуться ко входу</router-link>
       </div>
     </div>
   </div>
@@ -62,37 +58,36 @@ const step = ref(1)
 const loading = ref(false)
 
 const form = reactive({
-  fullName: '',
   email: '',
-  password: '',
-  code: ''
+  code: '',
+  newPassword: ''
 })
 
-const handleRequestCode = async () => {
-  if (!form.email || !form.fullName) return
+const handleRequestResetCode = async () => {
+  if (!form.email) return
   
   loading.value = true
   try {
-    await authStore.requestRegisterCode(form.email)
-    ElMessage.success('Код подтверждения отправлен на почту')
+    await authStore.requestResetCode(form.email)
+    ElMessage.success('Код для сброса отправлен на почту')
     step.value = 2
   } catch (error) {
-    ElMessage.error(error.response?.data?.detail || 'Ошибка при отправке кода')
+    ElMessage.error(error.response?.data?.detail || 'Произошла ошибка')
   } finally {
     loading.value = false
   }
 }
 
-const handleRegister = async () => {
-  if (!form.email || !form.password || !form.code) return
+const handleResetPassword = async () => {
+  if (!form.email || !form.code || !form.newPassword) return
   
   loading.value = true
   try {
-    await authStore.register(form.email, form.code, form.password, form.fullName)
-    ElMessage.success('Аккаунт успешно создан')
-    router.push('/workspaces')
+    await authStore.resetPassword(form.email, form.code, form.newPassword)
+    ElMessage.success('Пароль успешно изменён! Теперь вы можете войти.')
+    router.push('/login')
   } catch (error) {
-    ElMessage.error(error.response?.data?.detail || 'Ошибка при регистрации')
+    ElMessage.error(error.response?.data?.detail || 'Неверный код или ошибка сервера')
   } finally {
     loading.value = false
   }

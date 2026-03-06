@@ -18,8 +18,13 @@
         </el-button>
       </el-form>
       
-      <div class="auth-footer">
-        Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link>
+      <div class="auth-footer" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div>
+          <router-link to="/forgot-password" class="forgot-pwd">Забыли пароль?</router-link>
+        </div>
+        <div>
+          Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link>
+        </div>
       </div>
     </div>
   </div>

@@ -1,5 +1,6 @@
 <template>
-  <div class="task-page page-container flex-center">
+  <Teleport to="body">
+  <div class="task-page">
     <div class="task-modal-card glass-panel" v-loading="loading">
       <div v-if="task" class="task-content">
         <div class="task-header">
@@ -58,11 +59,22 @@
               </div>
               <div class="attachments-list">
                 <div v-for="att in task.attachments" :key="att.id" class="attachment-item">
-                  <div class="attachment-thumb">
-                    <el-icon><Picture /></el-icon>
+                  <div class="attachment-thumb" v-if="isImage(att.file_name)">
+                    <el-image
+                      style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;"
+                      :src="getAttachmentUrl(att.file_path)"
+                      :preview-src-list="[getAttachmentUrl(att.file_path)]"
+                      :z-index="3000"
+                      fit="cover"
+                      preview-teleported
+                      hide-on-click-modal
+                    />
+                  </div>
+                  <div class="attachment-thumb" v-else>
+                    <el-icon><Document /></el-icon>
                   </div>
                   <div class="attachment-details">
-                    <a :href="`http://localhost:8000${att.file_path}`" target="_blank">{{ att.file_name }}</a>
+                    <a :href="getAttachmentUrl(att.file_path)" target="_blank" :download="att.file_name">{{ att.file_name }}</a>
                     <span class="attachment-date">Добавлено {{ new Date(att.uploaded_at).toLocaleDateString('ru-RU') }}</span>
                   </div>
                   <el-button text type="danger" :icon="Delete" @click="deleteAttachment(att.id)" size="small" />
@@ -99,13 +111,34 @@
               </el-upload>
               <el-button class="full-width-btn" :icon="Link" @click="linkDialogVisible = true">Ссылка</el-button>
               <el-button 
-                class="full-width-btn" 
+                class="full-width-btn text-wrap" 
                 :type="task.is_completed ? 'success' : 'default'" 
                 :icon="Check"
                 @click="toggleComplete"
               >
-                {{ task.is_completed ? 'Выполнено' : 'Отметить как выполненное' }}
+                <span>{{ task.is_completed ? 'Выполнено' : 'Отметить как выполненное' }}</span>
               </el-button>
+            </div>
+
+            <!-- Color picker -->
+            <div class="action-module">
+              <h4>Цвет карточки</h4>
+              <div class="color-swatches">
+                <div
+                  class="swatch swatch-none"
+                  :class="{ active: !task.color }"
+                  @click="setColor(null)"
+                  title="Без цвета"
+                ></div>
+                <div
+                  v-for="c in colorOptions"
+                  :key="c"
+                  class="swatch"
+                  :class="{ active: task.color === c }"
+                  :style="{ background: c }"
+                  @click="setColor(c)"
+                ></div>
+              </div>
             </div>
             
             <div class="action-module action-danger">
@@ -135,7 +168,9 @@
       </template>
     </el-dialog>
   </div>
+  </Teleport>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -148,7 +183,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const route = useRoute()
 const router = useRouter()
 const boardStore = useBoardStore()
-const taskId = Number(route.params.id)
+const taskId = Number(route.params.taskId)
 
 const task = ref(null)
 const loading = ref(true)
@@ -161,6 +196,16 @@ const editDesc = ref('')
 
 const linkDialogVisible = ref(false)
 const newLink = ref({ url: '', title: '' })
+
+const colorOptions = [
+  '#ef4444', '#f97316', '#eab308',
+  '#22c55e', '#3b82f6', '#8b5cf6',
+  '#ec4899', '#14b8a6', '#64748b',
+]
+
+const setColor = async (color) => {
+  task.value = await boardStore.updateTask(taskId, { color: color || '' })
+}
 
 onMounted(async () => {
   await fetchTask()
@@ -179,8 +224,19 @@ const fetchTask = async () => {
   }
 }
 
+const getAttachmentUrl = (path) => {
+  const baseUrl = api.defaults.baseURL || 'http://localhost:8000'
+  return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`
+}
+
+const isImage = (filename) => {
+  if (!filename) return false;
+  const ext = filename.split('.').pop().toLowerCase();
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
+}
+
 const goBack = () => {
-  router.back()
+  router.push({ name: 'Board', params: { id: route.params.id } })
 }
 
 const startEditingTitle = () => {
@@ -257,10 +313,12 @@ const deleteLink = async (id) => {
 
 <style scoped>
 .task-page {
-  position: absolute;
+  position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.6);
   z-index: 2000;
+  display: flex;
+  justify-content: center;
   align-items: flex-start;
   padding-top: 4rem;
   overflow-y: auto;
@@ -300,6 +358,8 @@ const deleteLink = async (id) => {
   font-size: 1.5rem;
   font-weight: 600;
   cursor: pointer;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .title-edit {
@@ -360,6 +420,8 @@ const deleteLink = async (id) => {
 
 .desc-text {
   white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
   cursor: pointer;
   line-height: 1.5;
 }
@@ -389,6 +451,11 @@ const deleteLink = async (id) => {
   margin-left: 0 !important;
   background: rgba(255,255,255,0.05);
   border: none;
+  white-space: normal;
+  height: auto;
+  line-height: 1.4;
+  text-align: left;
+  padding: 0.5rem 1rem;
 }
 
 .full-width-btn:hover {
@@ -450,5 +517,53 @@ const deleteLink = async (id) => {
 .link-item a {
   color: var(--primary-color);
   text-decoration: underline;
+}
+
+/* Color swatches */
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.swatch:hover {
+  transform: scale(1.2);
+}
+
+.swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
+}
+
+.swatch-none {
+  background: rgba(255,255,255,0.08);
+  border: 2px dashed rgba(255,255,255,0.3);
+}
+
+.swatch-none::before,
+.swatch-none::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 1.5px;
+  background: rgba(255,255,255,0.4);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.swatch-none::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 </style>

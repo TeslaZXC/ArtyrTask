@@ -21,7 +21,7 @@
         :animation="200"
       >
         <template #item="{ element: list }">
-          <BoardList :list="list" />
+          <BoardList :list="list" :canEdit="canEdit" />
         </template>
         
         <template #footer>
@@ -46,14 +46,18 @@
         </template>
       </draggable>
     </div>
+    
+    <router-view></router-view>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useBoardStore } from '../stores/board'
 import { useWorkspaceStore } from '../stores/workspace'
+import { useAuthStore } from '../stores/auth'
+import { useWebSocket } from '../composables/useWebSocket'
 import draggable from 'vuedraggable'
 import BoardList from '../components/BoardList.vue'
 import { ArrowLeft, Plus, Close } from '@element-plus/icons-vue'
@@ -63,12 +67,19 @@ const router = useRouter()
 const route = useRoute()
 const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
+const authStore = useAuthStore()
 const boardId = Number(route.params.id)
 
 const isAddingList = ref(false)
 const newListTitle = ref('')
 
 const currentBoard = computed(() => boardStore.currentBoard)
+
+// Role-based permissions
+const canEdit = computed(() => {
+  const role = workspaceStore.currentRole
+  return role === 'owner' || role === 'editor'
+})
 
 const boardLists = computed({
   get: () => boardStore.lists,
@@ -79,6 +90,24 @@ const boardLists = computed({
 
 onMounted(async () => {
   await boardStore.fetchBoardData(boardId)
+
+  // Ensure workspaces are loaded so we have the role
+  if (workspaceStore.workspaces.length === 0) {
+    await workspaceStore.fetchWorkspaces()
+  }
+  if (currentBoard.value) {
+    // Set currentRole from the workspace this board belongs to
+    const ws = workspaceStore.workspaces.find(w => w.id === currentBoard.value.workspace_id)
+    if (ws) workspaceStore.currentRole = ws.member_role
+  }
+
+  // WebSocket real-time sync
+  const token = authStore.token
+  if (token) {
+    useWebSocket(boardId, token, async () => {
+      await boardStore.fetchBoardData(boardId, true)
+    })
+  }
 })
 
 const goBack = () => {

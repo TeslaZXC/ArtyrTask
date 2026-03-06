@@ -15,8 +15,7 @@
         @keyup.esc="cancelEditingName"
       />
       
-      <div class="list-actions">
-        <!-- More actions dropdown could go here -->
+      <div class="list-actions" v-if="canEdit">
         <el-button text size="small" :icon="Delete" @click="confirmDeleteList" />
       </div>
     </div>
@@ -38,7 +37,7 @@
     </div>
     
     <div class="list-footer">
-      <div v-if="!isAddingTask" class="add-task-btn" @click="isAddingTask = true">
+      <div v-if="canEdit && !isAddingTask" class="add-task-btn" @click="isAddingTask = true">
         <el-icon><Plus /></el-icon> Добавить карточку
       </div>
       <div v-else class="add-task-form">
@@ -69,17 +68,22 @@ import { Plus, Delete, Close } from '@element-plus/icons-vue'
 import { useBoardStore } from '../stores/board'
 import TaskCard from './TaskCard.vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const props = defineProps({
   list: {
     type: Object,
     required: true
+  },
+  canEdit: {
+    type: Boolean,
+    default: true
   }
 })
 
 const boardStore = useBoardStore()
 const router = useRouter()
+const route = useRoute()
 
 const isAddingTask = ref(false)
 const newTaskTitle = ref('')
@@ -90,7 +94,7 @@ const editName = ref(props.list.name)
 const listTasks = computed({
   get: () => boardStore.tasks[props.list.id] || [],
   set: (val) => {
-    // Handled by change event primarily
+    boardStore.tasks[props.list.id] = val
   }
 })
 
@@ -130,23 +134,22 @@ const handleAddTask = async () => {
 
 const onTaskChange = async (evt) => {
   if (evt.added) {
-    await boardStore.moveTaskBetweenLists(
-      evt.added.element.id,
-      evt.added.element.list_id,
-      props.list.id,
-      evt.added.newIndex
-    )
+    // Sync both the source list and the destination list orders
+    await boardStore.syncTasksOrder([evt.added.element.list_id, props.list.id])
   } else if (evt.moved) {
-    const newArray = [...boardStore.tasks[props.list.id]]
-    const element = newArray.splice(evt.moved.oldIndex, 1)[0]
-    newArray.splice(evt.moved.newIndex, 0, element)
-    await boardStore.updateTaskOrder(props.list.id, newArray)
+    // Sync just this list
+    await boardStore.syncTasksOrder([props.list.id])
   }
 }
 
 const openTaskModal = (task) => {
-  // Navigate to task detail route
-  router.push(`/task/${task.id}`)
+  // Navigate to task detail nested route
+  if (boardStore.currentBoard) {
+    router.push({
+      name: 'Task',
+      params: { id: boardStore.currentBoard.id, taskId: task.id }
+    })
+  }
 }
 </script>
 

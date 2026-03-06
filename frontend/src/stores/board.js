@@ -10,8 +10,8 @@ export const useBoardStore = defineStore('board', {
     }),
 
     actions: {
-        async fetchBoardData(boardId) {
-            this.loading = true
+        async fetchBoardData(boardId, background = false) {
+            if (!background) this.loading = true
             try {
                 const boardRes = await api.get(`/boards/${boardId}`)
                 this.currentBoard = boardRes.data
@@ -29,7 +29,7 @@ export const useBoardStore = defineStore('board', {
                     this.tasks[list.id] = tasksResponses[index].data || []
                 })
             } finally {
-                this.loading = false
+                if (!background) this.loading = false
             }
         },
 
@@ -68,35 +68,23 @@ export const useBoardStore = defineStore('board', {
             return response.data
         },
 
-        async updateTaskOrder(listId, tasksInList) {
-            this.tasks[listId] = tasksInList
-            const items = tasksInList.map((task, index) => ({
-                id: task.id,
-                list_id: listId,
-                position: index
-            }))
-            await api.patch('/tasks/order', items)
-        },
-
-        async moveTaskBetweenLists(taskId, fromListId, toListId, newIndex) {
-            const fromTasks = this.tasks[fromListId] || []
-            const taskIndex = fromTasks.findIndex(t => t.id === taskId)
-            if (taskIndex === -1) return
-
-            const [task] = fromTasks.splice(taskIndex, 1)
-
-            task.list_id = toListId
-            if (!this.tasks[toListId]) this.tasks[toListId] = []
-
-            const toTasks = this.tasks[toListId]
-            toTasks.splice(newIndex, 0, task)
-
-            const items = [
-                ...fromTasks.map((t, idx) => ({ id: t.id, list_id: fromListId, position: idx })),
-                ...toTasks.map((t, idx) => ({ id: t.id, list_id: toListId, position: idx }))
-            ]
-
-            await api.patch('/tasks/order', items)
+        async syncTasksOrder(listIds) {
+            let items = []
+            const uniqueListIds = [...new Set(listIds)]
+            for (const listId of uniqueListIds) {
+                const tasks = this.tasks[listId] || []
+                tasks.forEach((task, index) => {
+                    task.list_id = listId // update locally
+                    items.push({
+                        id: task.id,
+                        list_id: listId,
+                        position: index
+                    })
+                })
+            }
+            if (items.length > 0) {
+                await api.patch('/tasks/order', items)
+            }
         },
 
         async updateTask(taskId, taskUpdate) {

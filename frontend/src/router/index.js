@@ -13,6 +13,12 @@ const routes = [
         meta: { guest: true }
     },
     {
+        path: '/forgot-password',
+        name: 'ForgotPassword',
+        component: () => import('../views/ForgotPasswordView.vue'),
+        meta: { guest: true }
+    },
+    {
         path: '/register',
         name: 'Register',
         component: () => import('../views/RegisterView.vue'),
@@ -31,16 +37,23 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
-        path: '/board/:id',
-        name: 'Board',
-        component: () => import('../views/BoardView.vue'),
+        path: '/workspaces/:id/members',
+        name: 'WorkspaceMembers',
+        component: () => import('../views/MembersView.vue'),
         meta: { requiresAuth: true }
     },
     {
-        path: '/task/:id',
-        name: 'Task',
-        component: () => import('../views/TaskView.vue'),
-        meta: { requiresAuth: true }
+        path: '/board/:id',
+        name: 'Board',
+        component: () => import('../views/BoardView.vue'),
+        meta: { requiresAuth: true },
+        children: [
+            {
+                path: 'task/:taskId',
+                name: 'Task',
+                component: () => import('../views/TaskView.vue')
+            }
+        ]
     }
 ]
 

@@ -7,9 +7,12 @@
         </el-button>
         <h1 class="page-title">{{ currentWorkspace?.name || 'Доски пространства' }}</h1>
       </div>
-      <el-button type="primary" @click="createDialogVisible = true" :icon="Plus">
-        Новая доска
-      </el-button>
+      <div class="header-right">
+        <el-button :icon="User" @click="goToMembers">Участники</el-button>
+        <el-button v-if="canEdit" type="primary" @click="createDialogVisible = true" :icon="Plus">
+          Новая доска
+        </el-button>
+      </div>
     </div>
 
     <div v-loading="workspaceStore.loading" class="boards-grid">
@@ -22,7 +25,7 @@
         <div class="board-info">
           <h3>{{ board.name }}</h3>
         </div>
-        <div class="board-actions">
+        <div v-if="canEdit" class="board-actions">
           <el-button 
             type="danger" 
             text 
@@ -63,7 +66,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useWorkspaceStore } from '../stores/workspace'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, ArrowLeft, Delete, Files } from '@element-plus/icons-vue'
+import { Plus, ArrowLeft, Delete, Files, User } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -77,12 +80,19 @@ const currentWorkspace = computed(() => {
   return workspaceStore.workspaces.find(w => w.id === workspaceId)
 })
 
+const canEdit = computed(() => {
+  const role = currentWorkspace.value?.member_role
+  return role === 'owner' || role === 'editor'
+})
+
 onMounted(async () => {
-  if (workspaceStore.workspaces.length === 0) {
-    await workspaceStore.fetchWorkspaces()
-  }
+  await workspaceStore.fetchWorkspaces()
   await workspaceStore.fetchWorkspaceBoards(workspaceId)
 })
+
+const goToMembers = () => {
+  router.push(`/workspaces/${workspaceId}/members`)
+}
 
 const goToBoard = (id) => {
   router.push(`/board/${id}`)
@@ -126,6 +136,12 @@ const confirmDelete = (board) => {
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 2rem;
+}
+
+.header-right {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .header-left {

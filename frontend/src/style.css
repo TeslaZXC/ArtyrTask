@@ -1,4 +1,4 @@
-:root {
+:root, [data-theme="dark"] {
   --primary-color: #6366f1;
   --primary-hover: #4f46e5;
   --bg-color: #0f172a;
@@ -11,6 +11,77 @@
   --glass-border: rgba(255, 255, 255, 0.1);
   --board-bg: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
 }
+
+[data-theme="light"] {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --bg-color: #f8fafc;
+  --surface-color: #ffffff;
+  --surface-hover: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border-color: #e2e8f0;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --board-bg: linear-gradient(135deg, #dbeafe 0%, #f1f5f9 100%);
+}
+
+[data-theme="neon"] {
+  --primary-color: #fb7185;
+  --primary-hover: #f43f5e;
+  --bg-color: #050511;
+  --surface-color: #0c0a20;
+  --surface-hover: #191440;
+  --text-primary: #fdf2f8;
+  --text-secondary: #f472b6;
+  --border-color: #831843;
+  --glass-bg: rgba(12, 10, 32, 0.7);
+  --glass-border: rgba(244, 63, 94, 0.3);
+  --board-bg: linear-gradient(135deg, #2e1065 0%, #050511 100%);
+}
+
+[data-theme="summer"] {
+  --primary-color: #ea580c;
+  --primary-hover: #c2410c;
+  --bg-color: #fef9c3;
+  --surface-color: #fef08a;
+  --surface-hover: #fde047;
+  --text-primary: #422006;
+  --text-secondary: #713f12;
+  --border-color: #facc15;
+  --glass-bg: rgba(254, 240, 138, 0.7);
+  --glass-border: rgba(234, 88, 12, 0.2);
+  --board-bg: linear-gradient(135deg, #ffedd5 0%, #fef9c3 100%);
+}
+
+[data-theme="ocean"] {
+  --primary-color: #06b6d4;
+  --primary-hover: #0891b2;
+  --bg-color: #082f49;
+  --surface-color: #0c4a6e;
+  --surface-hover: #0f766e;
+  --text-primary: #ecfeff;
+  --text-secondary: #a5f3fc;
+  --border-color: #164e63;
+  --glass-bg: rgba(12, 74, 110, 0.7);
+  --glass-border: rgba(6, 182, 212, 0.2);
+  --board-bg: linear-gradient(135deg, #1e3a8a 0%, #082f49 100%);
+}
+
+[data-theme="sunset"] {
+  --primary-color: #e11d48;
+  --primary-hover: #be123c;
+  --bg-color: #4c0519;
+  --surface-color: #881337;
+  --surface-hover: #9f1239;
+  --text-primary: #fff1f2;
+  --text-secondary: #fecdd3;
+  --border-color: #9f1239;
+  --glass-bg: rgba(136, 19, 55, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --board-bg: linear-gradient(135deg, #7c2d12 0%, #4c0519 100%);
+}
+
 
 * {
   box-sizing: border-box;
