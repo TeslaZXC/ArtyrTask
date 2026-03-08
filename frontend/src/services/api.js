@@ -2,7 +2,7 @@ import axios from 'axios'
 import router from '../router'
 
 export const api = axios.create({
-    baseURL: 'http://localhost:8000',
+    baseURL: import.meta.env.DEV ? 'http://localhost:8000' : '',
     headers: {
         'Content-Type': 'application/json'
     }

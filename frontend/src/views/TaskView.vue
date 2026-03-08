@@ -225,7 +225,7 @@ const fetchTask = async () => {
 }
 
 const getAttachmentUrl = (path) => {
-  const baseUrl = api.defaults.baseURL || 'http://localhost:8000'
+  const baseUrl = api.defaults.baseURL || ''
   return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`
 }
 

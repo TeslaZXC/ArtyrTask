@@ -14,7 +14,8 @@ export function useWebSocket(boardId, token, onRefresh) {
     const connect = () => {
         if (stopped) return
         const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
-        const url = `${protocol}://${location.hostname}:8000/ws/board/${boardId}?token=${token}`
+        const wsHost = import.meta.env.DEV ? 'localhost:8000' : location.host
+        const url = `${protocol}://${wsHost}/ws/board/${boardId}?token=${token}`
         const socket = new WebSocket(url)
 
         socket.onmessage = (event) => {
